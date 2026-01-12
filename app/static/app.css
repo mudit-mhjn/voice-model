@@ -1,0 +1,107 @@
+:root{
+    --bg:#0b1220;
+    --card:#111a2b;
+    --soft:#0e1729;
+    --text:#e9eefc;
+    --muted:#aab6d6;
+    --accent:#7c5cff;
+    --accent2:#22c55e;
+    --line:rgba(255,255,255,0.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
+    background: radial-gradient(1200px 800px at 15% 10%, rgba(124,92,255,0.25), transparent 60%),
+                radial-gradient(900px 600px at 80% 30%, rgba(34,197,94,0.12), transparent 60%),
+                var(--bg);
+    color:var(--text);
+  }
+  a{color:var(--text); text-decoration:none}
+  a:hover{opacity:0.9}
+  .topbar{
+    position:sticky; top:0; z-index:10;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 18px; border-bottom:1px solid var(--line);
+    background: rgba(11,18,32,0.8); backdrop-filter: blur(10px);
+  }
+  .brand{display:flex; gap:12px; align-items:center}
+  .logo{width:38px; height:38px}
+  .brand-title{font-weight:800; letter-spacing:0.2px}
+  .brand-sub{font-size:12px; color:var(--muted)}
+  .nav{display:flex; gap:10px; flex-wrap:wrap}
+  .nav a{padding:8px 10px; border:1px solid transparent; border-radius:10px}
+  .nav a:hover{border-color:var(--line); background:rgba(255,255,255,0.03)}
+  
+  .container{max-width:1050px; margin:24px auto; padding:0 14px}
+  .footer{padding:24px 14px; text-align:center; color:var(--muted)}
+  .disclaimer{
+    margin-bottom:16px; padding:12px 14px; border:1px solid var(--line);
+    border-radius:14px; background:rgba(255,255,255,0.03);
+  }
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .soft{background:rgba(255,255,255,0.03)}
+  .glow{box-shadow: 0 0 0 1px rgba(124,92,255,0.25), 0 35px 80px rgba(124,92,255,0.15)}
+  .hero h1{margin:0 0 8px 0; font-size:30px}
+  .muted{color:var(--muted)}
+  .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:14px}
+  .grid3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px}
+  @media (max-width: 900px){
+    .grid2,.grid3{grid-template-columns:1fr}
+  }
+  .row{display:flex; align-items:center; gap:10px}
+  .wrap{flex-wrap:wrap}
+  .full{width:100%}
+  .big{font-size:18px; font-weight:800; margin:8px 0}
+  
+  label{display:flex; flex-direction:column; gap:6px; font-weight:600}
+  input,select{
+    padding:10px 12px; border-radius:12px; border:1px solid var(--line);
+    background:rgba(255,255,255,0.03); color:var(--text);
+    outline:none;
+  }
+  input:focus,select:focus{border-color:rgba(124,92,255,0.6)}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.03);
+    color: var(--text);
+    cursor:pointer;
+    font-weight: 600;
+  }
+  .btn:hover{background:rgba(255,255,255,0.06)}
+  .btn.primary{border-color: rgba(124,92,255,0.6); background: rgba(124,92,255,0.15); color: var(--text);}
+  .btn.secondary{border-color: rgba(255,255,255,0.12); color: var(--text);}
+  .btn:disabled{opacity: 0.5; cursor: not-allowed;}
+  .btn.small{padding:6px 10px; border-radius:10px; font-size:12px}
+  .pill{
+    display:inline-flex; padding:6px 10px; border-radius:999px;
+    border:1px solid var(--line); background:rgba(255,255,255,0.03);
+    font-size:12px; color:var(--muted);
+  }
+  .tag{
+    display:inline-flex; padding:6px 10px; border-radius:999px;
+    border:1px solid rgba(34,197,94,0.35);
+    background:rgba(34,197,94,0.10);
+    font-weight:800;
+  }
+  .tableWrap{overflow:auto; border-radius:12px; border:1px solid var(--line)}
+  .table{width:100%; border-collapse:collapse; min-width:700px}
+  .table th,.table td{
+    padding:10px 12px; border-bottom:1px solid var(--line); text-align:left;
+  }
+  .table th{color:var(--muted); font-weight:700}
+  .pre{
+    background:rgba(0,0,0,0.25);
+    border:1px solid var(--line);
+    padding:12px; border-radius:12px; overflow:auto;
+  }
+  

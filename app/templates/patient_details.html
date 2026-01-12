@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Patient Detail</h2>
+  <div class="grid2" style="margin-bottom: 14px;">
+    <div class="card soft">
+      <h3>Info</h3>
+      <div><b>Name:</b> {{ rec.name }}</div>
+      <div><b>Age:</b> {{ rec.age }}</div>
+      <div><b>Gender:</b> {{ rec.gender }}</div>
+      <div><b>Recorded:</b> {{ rec.created_at }} (UTC)</div>
+      <div><b>Duration:</b> {{ "%.2f"|format(rec.duration_sec) }} sec</div>
+    </div>
+
+    <div class="card soft">
+      <h3>Prediction</h3>
+      <div class="big">Predicted: <span class="tag">{{ predicted_label_display }}</span></div>
+      <div class="muted">Probabilities:</div>
+      <ul>
+        {% for k,v in proba.items() %}
+          <li><b>{{ k }}</b>: {{ "%.3f"|format(v) }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="card soft" style="margin-top: 14px;">
+    <h3>Set Actual Label</h3>
+    <form method="POST" action="/dashboard/patient/{{ rec.id }}/update-label">
+      <label>
+        Actual Diagnosis:
+        <select name="actual_label" style="margin-left: 10px;">
+          <option value="">-- Not Set --</option>
+          <option value="Benign" {% if rec.actual_label == "0" or rec.actual_label == "Benign" %}selected{% endif %}>Benign</option>
+          <option value="Malignant" {% if rec.actual_label == "1" or rec.actual_label == "Malignant" %}selected{% endif %}>Malignant</option>
+          <option value="Normal" {% if rec.actual_label == "2" or rec.actual_label == "Normal" %}selected{% endif %}>Normal</option>
+        </select>
+      </label>
+      <button type="submit" class="btn primary" style="margin-left: 10px; margin-top: 10px;">Update</button>
+      {% if rec.actual_label %}
+        <span style="margin-left: 10px; color: var(--muted);">
+          Current: 
+          {% if rec.actual_label == "0" or rec.actual_label == "Benign" %}
+            <span class="tag">Benign</span>
+          {% elif rec.actual_label == "1" or rec.actual_label == "Malignant" %}
+            <span class="tag">Malignant</span>
+          {% elif rec.actual_label == "2" or rec.actual_label == "Normal" %}
+            <span class="tag">Normal</span>
+          {% else %}
+            <span class="tag">{{ rec.actual_label }}</span>
+          {% endif %}
+        </span>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="card" style="margin-top: 14px;">
+    <h3>Aggregate features</h3>
+    <div class="tableWrap">
+      <table class="table">
+        <thead><tr><th>Feature</th><th>Value</th></tr></thead>
+        <tbody>
+        {% for k,v in features["aggregate"].items() %}
+          <tr><td>{{ k }}</td><td>{{ "%.6f"|format(v) if v is number else v }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">
+      Key markers include F0 Max, Shimmer APQ3/APQ5, CPP, and LTAS 0–1k.
+    </p>
+  </div>
+
+  <div class="card" style="margin-top: 14px;">
+    <h3>Segment predictions</h3>
+    <div class="tableWrap">
+      <table class="table">
+        <thead><tr><th>#</th><th>Time</th><th>Label</th><th>Probabilities</th></thead>
+        <tbody>
+        {% for sp in seg_preds %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ "%.1f"|format(sp.start_time) }}s - {{ "%.1f"|format(sp.end_time) }}s</td>
+            <td><span class="tag">{{ sp.label }}</span></td>
+            <td>
+              {% for k,v in sp.proba.items() %}
+                <span class="pill">{{ k }}: {{ "%.3f"|format(v) }}</span>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

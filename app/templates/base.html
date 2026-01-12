@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title if title else "Speech Screening Model" }}</title>
+  <link rel="stylesheet" href="/static/app.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="/static/logo.svg" class="logo" alt="logo"/>
+      <div>
+        <div class="brand-title">Speech Screening Model</div>
+        <div class="brand-sub">Non-invasive voice analysis demo (research use)</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="/">Home</a>
+      <a href="/record">Patient</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/dashboard/model-report">Model report</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="disclaimer">
+      <b>Disclaimer:</b> This tool is for research purposes only. It must not be used for clinical diagnosis without validation.
+    </div>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <span>Diagnosis of Laryngeal Diseases</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card glow">
+  <h2>Model Performance Report</h2>
+  <p class="muted">
+    This page displays the stored offline evaluation report (not recomputed live).
+  </p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Classification report</h3>
+      <pre class="pre">{{ report | tojson(indent=2) }}</pre>
+    </div>
+
+    <div class="card">
+      <h3>Confusion matrix</h3>
+      <canvas id="cmChart"></canvas>
+      <div class="muted">Labels: {{ cm.get("labels", []) }}</div>
+    </div>
+  </div>
+</section>
+
+<script>
+    window.CM_DATA = { "labels": cm.labels, "matrix": cm.matrix };
+    const labels = window.CM_DATA.labels || [];
+    const mat = window.CM_DATA.matrix || [];
+
+    // Simple heatmap-ish chart (stacked bars) for demo
+    const datasets = mat.map((row, i) => ({
+        label: labels[i] || `true_${i}`,
+        data: row
+    }));
+
+    new Chart(document.getElementById('cmChart'), {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+        responsive: true,
+        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+        }
+    });
+</script>
+{% endblock %}

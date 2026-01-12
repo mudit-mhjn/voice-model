@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Patient Recording</h2>
+  <p class="muted">
+    Record a sustained vowel (e.g., “aaa”) or normal speech. Longer recordings are split into 3s segments.
+  </p>
+
+  <form class="form" action="/predict" method="post" enctype="multipart/form-data" id="predictForm">
+    <div class="grid3" style="margin-bottom: 24px;">
+      <label>
+        Name
+        <input name="name" required placeholder="e.g., John Doe"/>
+      </label>
+      <label>
+        Age
+        <input name="age" required />
+      </label>
+      <label>
+        Gender
+        <select name="gender" required>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other / Prefer not to say</option>
+        </select>
+      </label>
+    </div>
+
+    <div style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,0.02);">
+        <label style="display: flex; flex-direction: column; gap: 8px; font-weight: 600; margin-bottom: 0;">
+          Upload WAV File (Alternative to Recording)
+          <input type="file" name="audio" id="audioFileUpload" accept="audio/wav" style="padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--text); outline: none; cursor: pointer;" />
+        </label>
+        <div id="uploadedFileDisplay" style="display: none; margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--line);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">🎵</span>
+              <span id="uploadedFileName" style="color: var(--text); font-weight: 500;"></span>
+            </div>
+        </div>
+        <p class="muted" style="margin-top: 8px; margin-bottom: 0; font-size: 13px;">Or use the recording controls below</p>
+    </div>
+
+    <div class="recorder card soft" style="margin-top: 20px;">
+      <div class="row" style="margin-bottom: 16px;">
+        <button type="button" class="btn" id="startBtn">● Start recording</button>
+        <button type="button" class="btn secondary" id="stopBtn" disabled>■ Stop</button>
+        <span id="timer" class="pill">00:00</span>
+      </div>
+
+      <audio id="playback" controls class="full" style="margin-top: 10px; margin-bottom: 16px;"></audio>
+      <input type="file" name="audio" id="audioFile" accept="audio/wav" required hidden />
+      <div class="row">
+        <button type="submit" class="btn primary" id="submitBtn" disabled>Run prediction</button>
+        <span class="muted">Upload WAV file</span>
+      </div>
+    </div>
+  </form>
+</section>
+{% endblock %}

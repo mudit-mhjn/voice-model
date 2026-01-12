@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card glow">
+  <h2>Prediction Result</h2>
+  <div class="grid2" style="margin-bottom: 14px;">
+    <div class="card soft">
+      <h3>Patient</h3>
+      <div><b>Name:</b> {{ rec.name }}</div>
+      <div><b>Age:</b> {{ rec.age }}</div>
+      <div><b>Gender:</b> {{ rec.gender }}</div>
+      <div><b>Duration:</b> {{ "%.2f"|format(rec.duration_sec) }} sec</div>
+    </div>
+
+    <div class="card soft">
+      <h3>Model output</h3>
+      <div class="big">
+        Predicted: <span class="tag">{{ predicted_label_display }}</span>
+      </div>
+      <div class="muted">Probabilities:</div>
+      <ul>
+        {% for k,v in proba.items() %}
+          <li><b>{{ k }}</b>: {{ "%.3f"|format(v) }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+    <div class="card">
+        <h3>Probability chart</h3>
+        <canvas id="probaChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Key features (aggregate)</h3>
+      <div class="tableWrap">
+        <table class="table">
+          <thead><tr><th>Feature</th><th>Value</th></tr></thead>
+          <tbody>
+          {% for k,v in features["aggregate"].items() %}
+            <tr><td>{{ k }}</td><td>{{ "%.6f"|format(v) if v is number else v }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">
+        Note: Markers like <b>F0 max</b>, <b>CPP</b>, and <b>LTAS 0–1k</b> which are often discriminative.
+      </p>
+  </div>
+</section>
+
+<script>
+    const probaData = {{ proba | tojson }};
+    const labels = Object.keys(probaData);
+    const data = Object.values(probaData);
+    const ctx = document.getElementById('probaChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: { 
+            labels, 
+            datasets: [{ 
+                label: 'Probability', 
+                data,
+                backgroundColor: 'rgba(124, 92, 255, 0.6)',
+                borderColor: 'rgba(124, 92, 255, 1)',
+                borderWidth: 1
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            scales: { y: { beginAtZero: true, max: 1.0 } },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+{% endblock %}

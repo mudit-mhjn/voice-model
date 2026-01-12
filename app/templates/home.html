@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero card glow">
+  <h1>AI in laryngeal disorders</h1>
+  <p>
+    Upload or record a voice sample, extract acoustic features, and run a machine learning model trained to classify 
+    voice sample as benign, normal or malignant.
+    The dashboard shows patient-wise features and stored model performance.
+  </p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Clinician dashboard</h3>
+      <ul>
+        <li>Patient list</li>
+        <li>Feature breakdown (F0, cepstral, spectral, LTAS)</li>
+        <li>Feature visualizations</li>
+      </ul>
+      <a class="btn" href="/dashboard">Open dashboard →</a>
+    </div>
+    <div class="card">
+      <h3>Patient screening</h3>
+      <ul>
+        <li>Browser-based recording (WAV)</li>
+        <li>Upload recorded voice sampples</li>
+        <li>Segment and overall prediction of sample</li>
+      </ul>
+      <a class="btn" href="/record">Record/Upload now →</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

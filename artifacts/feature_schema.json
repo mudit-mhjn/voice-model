@@ -1,0 +1,29 @@
+{
+  "feature_names": [
+    "rms_mean",
+    "snr_db",
+    "f0_mean",
+    "f0_median",
+    "f0_min",
+    "f0_max",
+    "f0_sd",
+    "f0_range",
+    "jitter_local",
+    "jitter_rap",
+    "jitter_ppq5",
+    "shimmer_local",
+    "shimmer_apq3",
+    "shimmer_apq5",
+    "shimmer_apq11",
+    "hnr_mean",
+    "cpp_mean",
+    "spectral_centroid",
+    "spectral_flatness",
+    "zcr",
+    "spectral_rolloff_85",
+    "ltas_0_1k",
+    "ltas_1_2k",
+    "ltas_2_4k",
+    "ltas_4_8k"
+  ]
+}
