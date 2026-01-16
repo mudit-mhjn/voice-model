@@ -54,6 +54,19 @@
     </form>
   </div>
 
+  <div class="card soft" style="margin-top: 14px;">
+    <h3>Recording</h3>
+    <audio
+      id ="patientPlayback" 
+      controls 
+      preload="None" 
+      class="full" 
+      style="margin-top: 10px;"
+      data-patient-id="{{ rec.id }}">
+    </audio>
+    <script src="/static/playback.js"> </script>
+  </div>
+
   <div class="card" style="margin-top: 14px;">
     <h3>Aggregate features</h3>
     <div class="tableWrap">
