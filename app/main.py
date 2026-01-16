@@ -1,6 +1,11 @@
 from contextlib import asynccontextmanager
 import json
 import uuid
+import os
+import boto3
+from botocore.utils import ClientError
+import requests
+import logging
 from pathlib import Path
 from fastapi import FastAPI, Request, UploadFile, File, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -21,6 +26,8 @@ from .services.features import extract_features_one_segment, aggregate_segment_f
 from .services.model_infer import ModelBundle, infer_recording, align_features_to_model_schema
 from .services.report_store import load_json_if_exists
 
+logger = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # on_startup
@@ -39,6 +46,44 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
 model_bundle = None
+
+def upload_audio_via_presigned_url(file_bytes: bytes, key: str, content_type: str) -> str:
+    try:
+        presigned_url = s3_client.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": S3_BUCKET,
+                "Key": key,
+                "ContentType": content_type,
+            },
+            ExpiresIn=3600,
+            HttpMethod = "PUT",
+        )
+    except ClientError as e:
+        logger.exception("Failed to generate presigned URL: %s", e)
+        raise HTTPException(status_code = 502, detail = "Failed to generate presigned URL")
+    try:
+        headers = {
+            "Content-Type": content_type
+        }
+        resp = requests.put(presigned_url, data = file_bytes, headers = headers)
+        if resp.status_code not in (200, 204):
+            logger.error("Failed to upload audio to S3: %s", 
+            extra={
+                    "status_code": resp.status_code,
+                    "response_text": resp.text,
+                    "bucket": S3_BUCKET,
+                    "key": key,
+                })
+            raise HTTPException(status_code = 502, detail = "Failed to upload audio to S3")
+    except Exception as e:
+        logger.exception("Failed to upload audio to S3: %s", e)
+        raise HTTPException(status_code = 502, detail = "Failed to upload audio to S3")
+    return f"s3://{S3_BUCKET}/{key}"
+
+S3_BUCKET = "voice-model-uploads"
+S3_UPLOAD_PREFIX = "uploads/"
+s3_client = boto3.client('s3', region_name = os.getenv("AWS_REGION"))
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
@@ -160,15 +205,15 @@ async def predict(
 
     # Save audio
     file_id = uuid.uuid4().hex
-    wav_path = settings.uploads_dir / f"{file_id}.wav"
-    write_wav(wav_path, y, sr)
+    key = f"{S3_UPLOAD_PREFIX}{file_id}{file_ext}"
+    audio_path = upload_audio_via_presigned_url(raw, key, audio.content_type)
 
     # Persist
     rec = Patients(
         name=name.strip(),
         age=int(age),
         gender=gender.strip().lower(),
-        audio_path=str(wav_path),
+        audio_path=audio_path,
         duration_sec=duration_sec,
         actual_label=None,    # not known, to be set after medical diagnosis
         predicted_label=combined_label,
