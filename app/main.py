@@ -81,6 +81,12 @@ def upload_audio_via_presigned_url(file_bytes: bytes, key: str, content_type: st
         raise HTTPException(status_code = 502, detail = "Failed to upload audio to S3")
     return f"s3://{S3_BUCKET}/{key}"
 
+def parse_s3_uri(s3_uri: str) -> tuple[str, str]:
+    if not s3_uri.startswith("s3://"):
+        raise ValueError("Invalid S3 URI: %s", s3_uri)
+    bucket, key = s3_uri.replace("s3://", "").split("/", 1)
+    return bucket, key
+
 S3_BUCKET = "voice-model-uploads"
 S3_UPLOAD_PREFIX = "uploads/"
 s3_client = boto3.client('s3', region_name = os.getenv("AWS_REGION"))
@@ -301,6 +307,24 @@ def dashboard(request: Request, page: int = 1, session: Session = Depends(get_se
             "total_count": len(total_count),
         },
     )
+
+
+@app.get("/dashboard/patient/{pid}/audio")
+def get_patient_audio(pid: int, session: Session = Depends(get_session)):
+    rec = session.get(Patients, pid)
+    if not rec:
+        raise HTTPException(status_code = 404, detail = "Not found")
+    try:
+        bucket, key = parse_s3_uri(rec.audio_path)
+        url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            HttpMethod = "GET"
+        )
+        return {"url": url}
+    except Exception as e:
+        logger.exception("Failed to get patient audio: %s", e)
+        raise HTTPException(status_code = 502, detail = "Failed to get patient audio")
 
 @app.get("/dashboard/patient/{pid}", response_class=HTMLResponse)
 def patient_detail(pid: int, request: Request, session: Session = Depends(get_session)):
