@@ -11,11 +11,12 @@ class Patients(SQLModel, table=True):
     audio_path: str
     duration_sec: float
     actual_label: Optional[str] = None
-    predicted_label: str
-    predicted_proba_json: str
+    predicted_label: Optional[str] = None
+    predicted_proba_json: Optional[str] = None
     segments: list["SegmentPredictions"] = Relationship(back_populates = "patient")
 
 class SegmentPredictions(SQLModel, table=True):
+    __tablename__ = 'segment_predictions'
     id: Optional[int] = Field(default=None, primary_key = True)
     patient_id: int = Field(foreign_key = "patients.id")
     segment_index: int

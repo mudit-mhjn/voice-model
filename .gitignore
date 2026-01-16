@@ -1,4 +1,14 @@
-./DS_Store
+.DS_Store
+**/.DS_Store
 venv/
 __pycache__/
 *.ipynb_checkpoints/
+.env
+.venv/
+app/.env
+data/db_ops/
+data/Benign/
+data/Malignant/
+data/Normal/
+data/uploads/
+data/v2/

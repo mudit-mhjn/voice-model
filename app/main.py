@@ -59,11 +59,26 @@ async def predict(
 ):
     if model_bundle is None:
         raise HTTPException(status_code=500, detail="Model not found. Put a joblib model file in place.")
+    
+    allowed_types = [
+        "audio/wav", "audio/x-wav", "audio/wave",
+        "audio/mpeg", "audio/mp3", "audio/mpeg3"
+    ]
 
-    if audio.content_type not in ["audio/wav", "audio/x-wav", "audio/wave"]:
+    if audio.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Please upload WAV audio (the recorder uses WAV).")
 
     raw = await audio.read()
+    file_ext = None
+    if audio.content_type in ["audio/mpeg", "audio/mp3", "audio/mpeg3"]:
+        file_ext = ".mp3"
+    elif audio.filename and audio.filename.lower().endswith('.mp3'):
+        file_ext = ".mp3"
+    elif audio.filename and audio.filename.lower().endswith('.wav'):
+        file_ext = ".wav"
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported audio format. Please upload WAV audio.")
+
     y, sr = read_wav_bytes_to_mono_float32(raw, settings.sample_rate)
     duration_sec = float(len(y) / sr)
 
