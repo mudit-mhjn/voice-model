@@ -308,7 +308,13 @@ def patient_detail(pid: int, request: Request, session: Session = Depends(get_se
     if not rec:
         raise HTTPException(status_code=404, detail="Not found")
 
-    proba = json.loads(rec.predicted_proba_json)
+    proba = {}
+    if rec.predicted_proba_json:
+        try:
+            proba = json.loads(rec.predicted_proba_json)
+        except json.JSONDecodeError:
+            proba = {}
+    
     label_map = {
         "0": "Benign",
         "1": "Malignant",
@@ -322,7 +328,10 @@ def patient_detail(pid: int, request: Request, session: Session = Depends(get_se
         else:
             proba_mapped[key.capitalize()] = proba[key]
     
-    predicted_label_display = label_map.get(rec.predicted_label, rec.predicted_label.capitalize())
+    if rec.predicted_label:
+        predicted_label_display = label_map.get(rec.predicted_label, rec.predicted_label.capitalize())
+    else:
+        predicted_label_display = "N/A"
     if predicted_label_display not in label_map:
         predicted_label_display = predicted_label_display.capitalize()
     
