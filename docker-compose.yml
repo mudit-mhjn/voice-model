@@ -1,0 +1,11 @@
+services:
+  voice-model:
+    build: .
+    container_name: voice-model
+    ports:
+      - "80:8000"
+    environment:
+      - DATA_DIR=/data
+    volumes:
+      - /opt/voice-model/data:/data
+    restart: always
