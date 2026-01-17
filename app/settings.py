@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from pathlib import Path
+import os
 
 class Settings(BaseModel):
     app_name: str = "voice-model"
@@ -9,7 +10,7 @@ class Settings(BaseModel):
 
     root: Path = Path(__file__).resolve().parent.parent
     artifacts_dir: Path = root / "artifacts"
-    data_dir: Path = root / "data"
+    data_dir: Path = Path(os.getenv("DATA_DIR", str(root / "data" )))
     uploads_dir: Path = data_dir / "uploads"
 
     model_path: Path = artifacts_dir / "xgb_all.joblib"
