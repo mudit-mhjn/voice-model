@@ -28,6 +28,11 @@ from .services.report_store import load_json_if_exists
 
 logger = logging.getLogger(__name__)
 
+S3_BUCKET = "voice-model-uploads"
+S3_UPLOAD_PREFIX = "uploads/"
+s3_client = boto3.client('s3', region_name = os.getenv("AWS_REGION", "ap-south-1"))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # on_startup
@@ -80,10 +85,6 @@ def upload_audio_via_presigned_url(file_bytes: bytes, key: str, content_type: st
         logger.exception("Failed to upload audio to S3: %s", e)
         raise HTTPException(status_code = 502, detail = "Failed to upload audio to S3")
     return f"s3://{S3_BUCKET}/{key}"
-
-S3_BUCKET = "voice-model-uploads"
-S3_UPLOAD_PREFIX = "uploads/"
-s3_client = boto3.client('s3', region_name = os.getenv("AWS_REGION"))
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
