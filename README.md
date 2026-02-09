@@ -19,3 +19,8 @@ docker run --rm -p 8000:8000
     voice-model
     uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+
+3) Docker cleanup before deploying, Run -
+```
+
+```

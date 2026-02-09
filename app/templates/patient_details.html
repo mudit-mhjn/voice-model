@@ -1,97 +1,112 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="card">
-  <h2>Patient Detail</h2>
-  <div class="grid2" style="margin-bottom: 14px;">
-    <div class="card soft">
-      <h3>Info</h3>
-      <div><b>Name:</b> {{ rec.name }}</div>
-      <div><b>Age:</b> {{ rec.age }}</div>
-      <div><b>Gender:</b> {{ rec.gender }}</div>
-      <div><b>Recorded:</b> {{ rec.created_at }} (UTC)</div>
-      <div><b>Duration:</b> {{ "%.2f"|format(rec.duration_sec) }} sec</div>
+<section class="dashboard-card patient-detail-page">
+  <!-- Breadcrumb & back -->
+  <nav class="patient-detail-nav">
+    <a href="/dashboard?filter=all&source=predicted" class="back-link">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to Dashboard
+    </a>
+  </nav>
+
+  <header class="patient-detail-header">
+    <h1 class="patient-detail-title">{{ rec.name }}</h1>
+    <div class="patient-detail-badges">
+      <span class="status-badge status-{{ predicted_label_display|lower }}">Predicted: {{ predicted_label_display }}</span>
+      {% if rec.actual_label %}
+        {% set actual_display = "Benign" if (rec.actual_label == "0" or rec.actual_label == "Benign") else ("Malignant" if (rec.actual_label == "1" or rec.actual_label == "Malignant") else "Normal") %}
+        <span class="status-badge status-{{ actual_display|lower }}">Actual: {{ actual_display }}</span>
+      {% else %}
+        <span class="status-badge status-unknown">Actual: Not set</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="patient-detail-grid">
+    <!-- Info -->
+    <div class="patient-panel">
+      <h3 class="patient-panel-title">Patient info</h3>
+      <dl class="patient-info-dl">
+        <dt>Age</dt><dd>{{ rec.age }}</dd>
+        <dt>Gender</dt><dd>{{ rec.gender }}</dd>
+        <dt>Recorded</dt><dd>{{ rec.created_at }} (UTC)</dd>
+        <dt>Duration</dt><dd>{{ "%.2f"|format(rec.duration_sec) }} sec</dd>
+      </dl>
     </div>
 
-    <div class="card soft">
-      <h3>Prediction</h3>
-      <div class="big">Predicted: <span class="tag">{{ predicted_label_display }}</span></div>
-      <div class="muted">Probabilities:</div>
-      <ul>
-        {% for k,v in proba.items() %}
-          <li><b>{{ k }}</b>: {{ "%.3f"|format(v) }}</li>
+    <!-- Prediction -->
+    <div class="patient-panel">
+      <h3 class="patient-panel-title">Model prediction</h3>
+      <p class="patient-prediction-main">Predicted: <span class="status-badge status-{{ predicted_label_display|lower }}">{{ predicted_label_display }}</span></p>
+      <p class="patient-proba-label">Probabilities</p>
+      <ul class="patient-proba-list">
+        {% for k, v in proba.items() %}
+          <li><span class="proba-name">{{ k }}</span><span class="proba-value">{{ "%.3f"|format(v) }}</span></li>
         {% endfor %}
       </ul>
     </div>
   </div>
 
-  <div class="card soft" style="margin-top: 14px;">
-    <h3>Set Actual Label</h3>
-    <form method="POST" action="/dashboard/patient/{{ rec.id }}/update-label">
-      <label>
-        Actual Diagnosis:
-        <select name="actual_label" style="margin-left: 10px;">
-          <option value="">-- Not Set --</option>
+  <!-- Set actual label -->
+  <div class="patient-panel patient-panel-full">
+    <h3 class="patient-panel-title">Set actual diagnosis</h3>
+    <form method="POST" action="/dashboard/patient/{{ rec.id }}/update-label" class="patient-label-form">
+      <label class="patient-label-field">
+        <span class="patient-label-label">Actual diagnosis</span>
+        <select name="actual_label" class="patient-label-select">
+          <option value="">-- Not set --</option>
           <option value="Benign" {% if rec.actual_label == "0" or rec.actual_label == "Benign" %}selected{% endif %}>Benign</option>
           <option value="Malignant" {% if rec.actual_label == "1" or rec.actual_label == "Malignant" %}selected{% endif %}>Malignant</option>
           <option value="Normal" {% if rec.actual_label == "2" or rec.actual_label == "Normal" %}selected{% endif %}>Normal</option>
         </select>
       </label>
-      <button type="submit" class="btn primary" style="margin-left: 10px; margin-top: 10px;">Update</button>
-      {% if rec.actual_label %}
-        <span style="margin-left: 10px; color: var(--muted);">
-          Current: 
-          {% if rec.actual_label == "0" or rec.actual_label == "Benign" %}
-            <span class="tag">Benign</span>
-          {% elif rec.actual_label == "1" or rec.actual_label == "Malignant" %}
-            <span class="tag">Malignant</span>
-          {% elif rec.actual_label == "2" or rec.actual_label == "Normal" %}
-            <span class="tag">Normal</span>
-          {% else %}
-            <span class="tag">{{ rec.actual_label }}</span>
-          {% endif %}
-        </span>
-      {% endif %}
+      <button type="submit" class="btn primary">Update</button>
     </form>
   </div>
 
-  <div class="card" style="margin-top: 14px;">
-    <h3>Aggregate features</h3>
-    <div class="tableWrap">
-      <table class="table">
+  <!-- Aggregate features -->
+  <div class="patient-panel patient-panel-full">
+    <h3 class="patient-panel-title">Aggregate features</h3>
+    <div class="patient-table-wrap">
+      <table class="dashboard-table">
         <thead><tr><th>Feature</th><th>Value</th></tr></thead>
         <tbody>
-        {% for k,v in features["aggregate"].items() %}
-          <tr><td>{{ k }}</td><td>{{ "%.6f"|format(v) if v is number else v }}</td></tr>
-        {% endfor %}
+          {% for k, v in features["aggregate"].items() %}
+            <tr><td>{{ k }}</td><td>{{ "%.6f"|format(v) if v is number else v }}</td></tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="muted">
-      Key markers include F0 Max, Shimmer APQ3/APQ5, CPP, and LTAS 0–1k.
-    </p>
+    <p class="patient-panel-note">Key markers include F0 Max, Shimmer APQ3/APQ5, CPP, and LTAS 0–1k.</p>
   </div>
 
-  <div class="card" style="margin-top: 14px;">
-    <h3>Segment predictions</h3>
-    <div class="tableWrap">
-      <table class="table">
-        <thead><tr><th>#</th><th>Time</th><th>Label</th><th>Probabilities</th></thead>
+  <!-- Segment predictions -->
+  <div class="patient-panel patient-panel-full">
+    <h3 class="patient-panel-title">Segment predictions</h3>
+    <div class="patient-table-wrap">
+      <table class="dashboard-table">
+        <thead><tr><th>#</th><th>Time</th><th>Label</th><th>Probabilities</th></tr></thead>
         <tbody>
-        {% for sp in seg_preds %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ "%.1f"|format(sp.start_time) }}s - {{ "%.1f"|format(sp.end_time) }}s</td>
-            <td><span class="tag">{{ sp.label }}</span></td>
-            <td>
-              {% for k,v in sp.proba.items() %}
-                <span class="pill">{{ k }}: {{ "%.3f"|format(v) }}</span>
-              {% endfor %}
-            </td>
-          </tr>
-        {% endfor %}
+          {% for sp in seg_preds %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ "%.1f"|format(sp.start_time) }}s – {{ "%.1f"|format(sp.end_time) }}s</td>
+              <td><span class="status-badge status-{{ sp.label|lower }}">{{ sp.label }}</span></td>
+              <td>
+                {% for k, v in sp.proba.items() %}
+                  <span class="pill">{{ k }}: {{ "%.3f"|format(v) }}</span>
+                {% endfor %}
+              </td>
+            </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- Delete patient -->
+  <form method="POST" action="/dashboard/patient/{{ rec.id }}/delete" class="patient-delete-form" onsubmit="return confirm('Permanently delete this patient and all their acoustic features and training data?');">
+    <button type="submit" class="btn btn-danger">Delete patient</button>
+  </form>
 </section>
 {% endblock %}

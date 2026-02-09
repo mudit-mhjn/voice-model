@@ -1,54 +1,142 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="card">
+<section class="dashboard-card">
   <h2>Clinician Dashboard</h2>
-  <p class="muted">All saved predictions (SQLite). Click a patient to see features + segments.</p>
-
+  
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-number">{{ total_count }}</div>
+      <div class="stat-label">Total Samples</div>
+    </div>
+    <div class="stat-card stat-benign">
+      <div class="stat-number">{{ benign_count }}</div>
+      <div class="stat-label">Benign</div>
+    </div>
+    <div class="stat-card stat-normal">
+      <div class="stat-number">{{ normal_count }}</div>
+      <div class="stat-label">Normal</div>
+    </div>
+    <div class="stat-card stat-critical">
+      <div class="stat-number">{{ malignant_count }}</div>
+      <div class="stat-label">Malignant</div>
+    </div>
+  </div>
+  
+  <!-- Filter Controls -->
+  <div class="dashboard-controls">
+    <div class="filter-buttons">
+      <a href="/dashboard?filter=all&source={{ source }}" 
+         class="filter-btn {% if current_filter == 'all' %}active{% endif %}">
+        All Status
+      </a>
+      <a href="/dashboard?filter=benign&source={{ source }}" 
+         class="filter-btn {% if current_filter == 'benign' %}active{% endif %}">
+        Benign
+      </a>
+      <a href="/dashboard?filter=normal&source={{ source }}" 
+         class="filter-btn {% if current_filter == 'normal' %}active{% endif %}">
+        Normal
+      </a>
+      <a href="/dashboard?filter=malignant&source={{ source }}" 
+         class="filter-btn {% if current_filter == 'malignant' %}active{% endif %}">
+        Malignant
+      </a>
+    </div>
+    
+    <div class="data-source-toggle">
+      <a href="/dashboard?filter={{ current_filter }}&source=predicted" 
+         class="toggle-btn {% if source == 'predicted' %}active{% endif %}">
+        Predicted Patients
+      </a>
+      <a href="/dashboard?filter={{ current_filter }}&source=training" 
+         class="toggle-btn {% if source == 'training' %}active{% endif %}">
+        Training Data
+      </a>
+    </div>
+  </div>
+  
+  <!-- Table -->
   <div class="tableWrap">
-    <table class="table">
+    <table class="dashboard-table">
       <thead>
         <tr>
-          <th>Patient ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Duration</th><th>Predicted</th><th>Actual</th>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Gender</th>
+          <th>Predicted Label</th>
+          <th>Actual Label</th>
+          <th>Action</th>
+          <!-- TODO: ADD ACTION TO OPEN PATIENT DETAILS PAGE -->
         </tr>
       </thead>
       <tbody>
-      {% for r in rows %}
+        {% for r in rows %}
         <tr>
-          <td>{{ r.id }}</td>
-          <td>{{ r.name }}</td>
-          <td>{{ r.age }}</td>
-          <td>{{ r.gender }}</td>
-          <td>{{ "%.2f"|format(r.duration_sec) }}s</td>
-          <td><span class="tag">{{ r.predicted_label }}</span></td>
           <td>
-            {% if r.actual_label %}
-              <span class="tag">{{ r.actual_label }}</span>
-            {% else %}
-              <span class="tag" style="opacity: 0.5;">Not Set</span>
-            {% endif %}
+            <div class="patient-info">
+              <div>{{ r.name }}</div>
+            </div>
           </td>
-          <td><a class="btn small" href="/dashboard/patient/{{ r.id }}">Open</a></td>
+          <td>{{ r.age }}</td>
+          <td>{{ r.gender.capitalize() }}</td>
+          <td>{{ r.predicted_label }}</td>
+          <td>
+            <span class="status-badge status-{{ r.actual_label }}">
+              {{ r.actual_label }}
+            </span>
+          </td>
+          <td>
+            <a href="/dashboard/patient/{{ r.id }}" class="action-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="None">
+                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Open
+            </a>
+          </td>
         </tr>
-      {% endfor %}
+        {% endfor %}
       </tbody>
     </table>
   </div>
 
+  <!-- Pagination Controls -->
   {% if total_pages > 1 %}
-  <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
-    {% if page > 1 %}
-      <a href="/dashboard?page={{ page - 1 }}" class="btn small">Previous</a>
-    {% else %}
-      <span class="btn small" style="opacity: 0.5; cursor: not-allowed;">Previous</span>
-    {% endif %} 
-    <span class="muted" style="padding: 0 10px;">
-      Page {{ page }} of {{ total_pages }} ({{ total_count }} total)
-    </span> 
-    {% if page < total_pages %}
-      <a href="/dashboard?page={{ page + 1 }}" class="btn small">Next</a>
-    {% else %}
-      <span class="btn small" style="opacity: 0.5; cursor: not-allowed;">Next</span>
-    {% endif %}
+  <div class="pagination-controls">
+    <div class="pagination-info">
+      Showing page {{ page }} of {{ total_pages }} ({{ total_count }} total samples)
+    </div>
+    <div class="pagination-buttons">
+      {% if page > 1 %}
+        <a href="/dashboard?page={{ page - 1 }}&filter={{ current_filter }}&source={{ source }}" 
+          class="pagination-btn">
+          ← Previous
+        </a>
+      {% else %}
+        <span class="pagination-btn disabled">← Previous</span>
+      {% endif %}    
+      <!-- Page numbers -->
+      {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+          <span class="pagination-btn active">{{ p }}</span>
+        {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+          <a href="/dashboard?page={{ p }}&filter={{ current_filter }}&source={{ source }}" 
+            class="pagination-btn">
+            {{ p }}
+          </a>
+        {% elif p == page - 3 or p == page + 3 %}
+          <span class="pagination-btn ellipsis">...</span>
+        {% endif %}
+      {% endfor %}      
+      {% if page < total_pages %}
+        <a href="/dashboard?page={{ page + 1 }}&filter={{ current_filter }}&source={{ source }}" 
+          class="pagination-btn">
+          Next →
+        </a>
+      {% else %}
+        <span class="pagination-btn disabled">Next →</span>
+      {% endif %}
+    </div>
   </div>
   {% endif %}
 </section>
