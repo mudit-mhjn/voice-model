@@ -1,32 +1,65 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero card glow">
-  <h1>AI in laryngeal disorders</h1>
-  <p>
-    Upload or record a voice sample, extract acoustic features, and run a machine learning model trained to classify 
-    voice sample as benign, normal or malignant.
-    The dashboard shows patient-wise features and stored model performance.
-  </p>
+<section class="home-hero">
+  <div class="hero-content">
+    <h1 class="hero-title">
+      <span class="title-line-1">AI In<span class="title-line-1-colored"> Laryngeal</span></span>
+      <span class="title-line-2">Disorders</span>
+    </h1>
+    <p class="hero-description">
+      Upload or record a voice sample and run AI model to classify sample as benign, normal or malignant.
+    </p>
+  </div>
+  <div class="hero-image-wrap">
+    <div class="hero-image-fadding">
+      <img src="/static/hero-image.png" alt="analyzing voice data" class="hero-image" />
+    </div>
+  </div>
+</section>
 
-  <div class="grid2">
-    <div class="card">
-      <h3>Clinician dashboard</h3>
-      <ul>
-        <li>Patient list</li>
-        <li>Feature breakdown (F0, cepstral, spectral, LTAS)</li>
-        <li>Feature visualizations</li>
-      </ul>
-      <a class="btn" href="/dashboard">Open dashboard →</a>
-    </div>
-    <div class="card">
-      <h3>Patient screening</h3>
-      <ul>
-        <li>Browser-based recording (WAV)</li>
-        <li>Upload recorded voice sampples</li>
-        <li>Segment and overall prediction of sample</li>
-      </ul>
-      <a class="btn" href="/record">Record/Upload now →</a>
-    </div>
+<section class="content-boxes">
+  <div class="content-box">
+    <h3>Patient Screening</h3>
+    <ul>
+      <li>Browser based recording</li>
+      <li>Upload recorded voice samples</li>
+      <li>Segment and overall prediction</li>
+    </ul>
+    <a class="btn" href="/record">Record/Upload Now</a>
+  </div>
+  <div class="content-box">
+    <h3>Clinician Dashboard</h3>
+    <ul>
+      <li>Patient list</li>
+      <li>Feature breakdown (F0, cepstral, spectral, LTAS)</li>
+      <li>Feature visualizations</li>
+    </ul>
+    <a class="btn" href="/dashboard">Open Dashboard</a>
+  </div>
+</section>
+
+
+<section class="how-it-works">
+  <div class="how-it-works-inner">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li>
+        <span class="step-number">1</span>
+        <span class="step-text">Record or upload a voice sample</span>
+      </li>
+      <li>
+        <span class="step-number">2</span>
+        <span class="step-text">Acoustic features are automatically extracted (F0, cepstral, spectral, LTAS)</span>
+      </li>
+      <li>
+        <span class="step-number">3</span>
+        <span class="step-text">AI model classifies the sample as benign, normal, or malignant</span>
+      </li>
+      <li>
+        <span class="step-number">4</span>
+        <span class="step-text">View detailed results and reports in the dashboard</span>
+      </li>
+    </ol>
   </div>
 </section>
 {% endblock %}

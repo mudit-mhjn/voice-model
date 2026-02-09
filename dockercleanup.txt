@@ -1,0 +1,11 @@
+docker compose down --remove-orphans
+
+docker system prune -af
+docker builder prune -af
+
+(optinal)
+docker volume prune -f
+
+build and run
+docker compose build --no-cache
+docker compose up -d

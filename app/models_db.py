@@ -6,13 +6,13 @@ class Patients(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key = True)
     name: str
     age: int
-    gender: str  # "male" / "female"
+    gender: str
     created_at: datetime = Field(default_factory=datetime.now)
     audio_path: str
     duration_sec: float
     actual_label: Optional[str] = None
-    predicted_label: Optional[str] = None
-    predicted_proba_json: Optional[str] = None
+    predicted_label: Optional[str] = None 
+    predicted_proba_json: Optional[str] = Field(default = "{}")
     segments: list["SegmentPredictions"] = Relationship(back_populates = "patient")
 
 class SegmentPredictions(SQLModel, table=True):
@@ -25,5 +25,11 @@ class SegmentPredictions(SQLModel, table=True):
     predicted_label: str
     predicted_proba_json: str
     features_json: str
-
     patient: Optional["Patients"] = Relationship(back_populates = "segments")
+
+
+class TrainingData(SQLModel, table = True):
+    __tablename__ = 'training_data'
+    id: Optional[int] = Field(default=None, primary_key = True)
+    patient_id: int = Field(foreign_key="patients.id")
+    

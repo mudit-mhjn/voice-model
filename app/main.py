@@ -18,7 +18,7 @@ from datetime import datetime
 
 from .settings import settings
 from .db import init_db, get_session
-from .models_db import Patients, SegmentPredictions
+from .models_db import Patients, SegmentPredictions, TrainingData
 
 from .services.audio_io import read_wav_bytes_to_mono_float32, write_wav
 from .services.segmenter import segment_audio, has_voice_activity
@@ -182,9 +182,9 @@ async def predict(
     combined_label = max(combined_proba, key = combined_proba.get)
 
     label_map = {
-        "0": "Benign",
-        "1": "Malignant",
-        "2": "Normal",
+        "0": "benign",
+        "1": "malignant",
+        "2": "normal",
     }
     class_name_map = {}
     for key in combined_proba.keys():
@@ -217,7 +217,7 @@ async def predict(
         audio_path=audio_path,
         duration_sec=duration_sec,
         actual_label=None,    # not known, to be set after medical diagnosis
-        predicted_label=combined_label,
+        predicted_label=combined_label_display,
         predicted_proba_json=json.dumps(combined_proba),
         segments=[],
         created_at=datetime.now()
@@ -253,19 +253,64 @@ async def predict(
         },
     )
 
+# TODO: Add filter and count for individual labels
+# TODO: UI CHANGES
+# TODO: REWRITE LOGIC WITH CORRECT OUTPUT
+# INPROGRESS: []
+# REVIEW: [ OPTIMIZATION NEEDED IN LOGIC, USE PANDAS HERE ]
+"""
+WHAT?
+- GET ALL PATIENTS WHO SYSTEM HAS PREDICTED
+- IF data_source IS "training", GET FROM TRAINING TABLE
+- CREATE DF FOR RESULT ROWS
+- CREATE MAPPED ROWS
+- 
+"""
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request, page: int = 1, session: Session = Depends(get_session)):
+def dashboard(
+    request: Request,
+    page: int = 1,
+    source: str = "predicted",
+    filter: str = "all",
+    session: Session = Depends(get_session)
+):
     per_page = 10
-    offset = (page - 1) * per_page
-    total_count = session.exec(select(Patients)).all()
-    total_pages = (len(total_count) + per_page - 1) // per_page
+    if source == "training":
+        base_query = (select(Patients)
+                        .join(TrainingData, Patients.id == TrainingData.patient_id)
+                        .order_by(Patients.created_at.desc()
+                        )
+                    )
+    else:
+        base_query = (select(Patients)
+                        .outerjoin(TrainingData, Patients.id == TrainingData.patient_id)
+                        .where(TrainingData.patient_id.is_(None))
+                        .order_by(Patients.created_at.desc()
+                        )
+                    )
+    
+    all_rows = session.exec(base_query).all()
+    total_count = len(all_rows)
+    if source == "training":
+        benign_count = len([r for r in all_rows if r.actual_label == "benign"])
+        malignant_count = len([r for r in all_rows if r.actual_label == "malignant"])
+        normal_count = len([r for r in all_rows if r.actual_label == "normal"])
+    else:
+        benign_count = len([r for r in all_rows if r.predicted_label == "benign"])
+        malignant_count = len([r for r in all_rows if r.predicted_label == "malignant"])
+        normal_count = len([r for r in all_rows if r.predicted_label == "normal"])
 
-    rows = session.exec(
-        select(Patients)
-        .order_by(Patients.created_at.desc())
-        .offset(offset)
-        .limit(per_page)
-        ).all()
+    if filter != "all":
+        if source == "training":
+            filtered_rows = [r for r in all_rows if r.actual_label == filter]
+        else:
+            filtered_rows = [r for r in all_rows if r.predicted_label == filter]
+    else:
+        filtered_rows = all_rows
+
+    total_pages = (len(filtered_rows) + per_page - 1) // per_page
+    offset = (page - 1) * per_page
+    rows = filtered_rows[offset:offset+per_page]
     
     label_map = {
         "0": "Benign",
@@ -277,7 +322,7 @@ def dashboard(request: Request, page: int = 1, session: Session = Depends(get_se
     for row in rows:
         predicted_label_display = label_map.get(
             row.predicted_label, 
-            row.predicted_label.capitalize() if row.predicted_label else 'N/A'
+            row.predicted_label.capitalize() if row.predicted_label else 'NA'
         )
         if predicted_label_display not in label_map:
             predicted_label_display = predicted_label_display.capitalize()
@@ -296,10 +341,15 @@ def dashboard(request: Request, page: int = 1, session: Session = Depends(get_se
     return templates.TemplateResponse("dashboard.html", 
         {
             "request": request, 
-            "rows": mapped_rows, 
+            "rows": mapped_rows,
+            "benign_count": benign_count,
+            "malignant_count": malignant_count,
+            "normal_count": normal_count,
+            "current_filter": filter,
+            "source": source,
             "page": page, 
             "total_pages": total_pages, 
-            "total_count": len(total_count),
+            "total_count": total_count,
         },
     )
 
@@ -332,7 +382,7 @@ def patient_detail(pid: int, request: Request, session: Session = Depends(get_se
     if rec.predicted_label:
         predicted_label_display = label_map.get(rec.predicted_label, rec.predicted_label.capitalize())
     else:
-        predicted_label_display = "N/A"
+        predicted_label_display = "NA"
     if predicted_label_display not in label_map:
         predicted_label_display = predicted_label_display.capitalize()
     
@@ -417,3 +467,24 @@ def model_report(request: Request):
         "model_report.html",
         {"request": request, "report": report, "cm": cm},
     )
+
+@app.post("/dashboard/patient/{pid}/delete", response_class=HTMLResponse)
+def delete_patient(pid: int, request: Request, session: Session = Depends(get_session)):
+    rec = session.get(Patients, pid)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        training_row = session.exec(select(TrainingData).where(TrainingData.patient_id == pid)).all()
+        for row in training_row:
+            session.delete(row)
+        
+        seg_rows = session.exec(select(SegmentPredictions).where(SegmentPredictions.patient_id == pid)).all()
+        for row in seg_rows:
+            session.delete(row)
+        session.delete(rec)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete patient: {e}")
+    return RedirectResponse(url=f"/dashboard?filter=all&source=predicted", status_code = 303)
+
